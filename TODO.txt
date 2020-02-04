@@ -1,0 +1,2 @@
+* add align, seperator, tabwidth, tabheight support
+* add multi-thread support

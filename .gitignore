@@ -1,0 +1,31 @@
+# eclipse
+Default/*
+.settings/
+.cproject
+.project
+
+# vscode
+.vscode/
+
+# keil
+*.dbgconf
+*.axf
+*.build_log.htm
+*.crf
+*.d
+*.dep
+*.htm
+*.icf
+*.lnp
+*.lst
+*.map
+*.o
+*.sct
+*.uvguix.*
+*.scvd
+*/MDK-ARM/DebugConfig/
+*/MDK-ARM/RTE/
+
+# ctags
+tags
+
