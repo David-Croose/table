@@ -47,5 +47,4 @@ int main(void) {
 error:
     printf("error\n");
     return -1;
-
 }
