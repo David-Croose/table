@@ -169,6 +169,7 @@ int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol
     return 0;
 }
 
+// TODO  not work
 int32_t table_add_seprow(table_handle_t *h, char sep) {
     uint32_t i, j;
     uint32_t sum;
@@ -253,60 +254,4 @@ void table_destroy(table_handle_t *h) {
     memset(h->pool, 0, h->poollen);
     memset(h, 0, sizeof(*h));
 }
-
-//===========================================================================================
-#define FAIL_IF(x)      if ((x) != 0) { goto error; }
-
-char *str[] = {
-    "123",
-    "4567",
-    "89",
-    "ABCDEFG",
-    "_abcd",
-    "__xxx",
-    "xyz0",
-    "~789cdef",
-    "!gg",
-    "hjklopq",
-    "22334",
-    "zxc_89",
-};
-
-/// int main() {
-///     char buf[20] = {0};
-///     int i;
-/// 
-///     for (i = 0; i < sizeof(str) / sizeof(str[0]); i++) {
-///         addstring_pad(buf, sizeof(buf), str[i]);
-///     }
-/// 
-/// 
-///     return 0;
-/// }
-
-int main() {
-    table_handle_t h;
-    static char buf[100];
-    static char readbuf[sizeof(buf) * 3];
-    uint32_t reallen;
-    int i;
-
-    FAIL_IF(table_init(&h, buf, sizeof(buf), 3, "\n"));
-    for (i = 0; i < sizeof(str) / sizeof(str[0]); i++) {
-        if (table_write(&h, str[i])) {
-            break;
-        }
-    }
-    FAIL_IF(table_read(&h, readbuf, sizeof(readbuf), &reallen));
-    printf("%s\n", readbuf);
-    table_destroy(&h);
-
-    printf("ok\n");
-    return 0;
-
-error:
-    printf("error\n");
-    return -1;
-}
-//===========================================================================================
 
