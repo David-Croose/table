@@ -111,17 +111,17 @@ static char *getitem(table_handle_t *h, uint32_t index) {
  * @param p: the buffer to be appended to
  * @param plen: the length(in bytes) of @p
  * @param item: the string append to @p
- * @param itemlen: the length(in bytes) of @item
+ * @param padlen: a fix length, if strlen(item) <= padlen, zero or many ' ' will be padded
+ *                 or, '...' will be padded
  * @return: <0  : failure
- *          >=0 : the wrote bytes
+ *          >=0 : the wrote bytes + 1(the "1" means the end ' ')
  */
-static int32_t addstring_pad(char *p, uint32_t plen, const char *item, uint32_t itemlen) {
+static int32_t addstring_pad(char *p, uint32_t plen, const char *item, uint32_t padlen) {
     uint32_t i;
-    char buf[CONFIG_ITEMSIZE];
-    uint32_t space;
-    uint32_t _itemlen;
+    char buf[CONFIG_ITEMSIZE + 1];      // there is a ' ' in the end
+    uint32_t itemlen;
 
-    if (!p || !plen || !item || (itemlen < MINIMAL_ITEMSIZE || itemlen > CONFIG_ITEMSIZE)) {
+    if (!p || !plen || !item || (padlen < MINIMAL_ITEMSIZE || padlen > CONFIG_ITEMSIZE)) {
         return -1;
     }
 
@@ -130,24 +130,23 @@ static int32_t addstring_pad(char *p, uint32_t plen, const char *item, uint32_t 
     if (i >= plen - 1) {                // if can't find '\0', which means p is full
         return -2;
     }
-
-    memset(buf, ' ', sizeof(buf));
-    space = itemlen - 1;                // the last character can not be filled, it must be ' ' or others
-    _itemlen = strlen(item);
-    if (_itemlen <= space) {
-        memcpy(buf, item, _itemlen);
-    } else {
-        memcpy(buf, item, space);
-        buf[space - 1] = '.';
-        buf[space - 2] = '.';
-        buf[space - 3] = '.';
-    }
-
-    if (itemlen > plen - 1 - i) {
+    if (padlen > plen - 1 - i) {        // if no enough noom to write
         return -3;
     }
-    memcpy(&p[i], buf, itemlen);
-    return itemlen;
+
+    memset(buf, ' ', sizeof(buf));
+    itemlen = strlen(item);
+    if (itemlen <= padlen) {
+        memcpy(buf, item, itemlen);
+    } else {
+        memcpy(buf, item, padlen);
+        buf[padlen - 1] = '.';
+        buf[padlen - 2] = '.';
+        buf[padlen - 3] = '.';
+    }
+
+    memcpy(&p[i], buf, padlen + 1);
+    return padlen + 1;
 }
 
 int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol, const char *end) {

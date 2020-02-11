@@ -1,7 +1,7 @@
 #include <stdint.h>
 
 #define CONFIG_MAXCOLLEN          (10)      // max colume length(in bytes)
-#define CONFIG_ITEMSIZE           (8)       // max item length(in bytes)
+#define CONFIG_ITEMSIZE           (80)       // max item length(in bytes)
 
 #define MINIMAL_ITEMSIZE          (5)
 
