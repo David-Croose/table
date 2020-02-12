@@ -159,6 +159,17 @@ static int32_t write_string(table_handle_t *h, const char *s) {
     return 0;
 }
 
+/**
+ * initialize a @table instance
+ * @param h: a @table instance
+ * @param mem: the memory to be attached to @h
+ * @param memlen: the length(in bytes) of @mem
+ * @param totcol: total column
+ * @param end: line end character. can be "\r", "\n" or "\r\n"
+ * @param title: the title of @h. if NULL, the title will not exist. note that the length of it must equals to @totcol
+ * @return: !0: faulure
+ *           0: success
+ */
 int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol, const char *end,
                    const char *title[]) {
     uint32_t i;
@@ -180,12 +191,19 @@ int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol
     h->totcol = totcol;
     strncpy(h->end, end, 2);
     h->title = (title ? 1 : 0);
-    for (i = 0; i < totcol; i++) {
+    for (i = 0; i < totcol && title; i++) {
         write_string(h, title[i]);
     }
     return 0;
 }
 
+/**
+ * write an item to @table
+ * @param h: a @table instance
+ * @param fmt,...: the formatted string
+ * @return: !0: faulure
+ *           0: success
+ */
 int32_t table_write(table_handle_t *h, const char *fmt, ...) {
     static char buf[CONFIG_ITEMSIZE];
     va_list args;
@@ -200,12 +218,22 @@ int32_t table_write(table_handle_t *h, const char *fmt, ...) {
     return write_string(h, buf);
 }
 
+/**
+ * read all string from @table
+ * @param h: a @table instance
+ * @param mem: the memory to be written into
+ * @param memlen: the length(in bytes) of @mem
+ * @param reallen: the real length(in bytes) of writing
+ * @return: !0: faulure
+ *           0: success
+ */
 int32_t table_read(table_handle_t *h, char *mem, uint32_t memlen, uint32_t *reallen) {
     char *p;
     uint32_t i;
     uint32_t linelen;
     uint32_t col;
     int32_t writelen;
+    uint32_t start;
 
     if (!h || !mem || !memlen || !reallen) {
         return -1;
@@ -252,9 +280,13 @@ int32_t table_read(table_handle_t *h, char *mem, uint32_t memlen, uint32_t *real
             return -3;
         }
         *reallen += linelen + 2;
+
+        start = h->totcol;
+    } else {
+        start = 0;
     }
 
-    for (i = h->totcol, col = 0; (p = getitem(h, i)) != NULL; i++) {
+    for (i = start, col = 0; (p = getitem(h, i)) != NULL; i++) {
         if ((writelen = addstring_pad(mem, memlen, p, h->colwidth[col])) < 0) {
             return -2;
         }
@@ -272,6 +304,10 @@ int32_t table_read(table_handle_t *h, char *mem, uint32_t memlen, uint32_t *real
     return 0;
 }
 
+/**
+ * destroy a @table instance
+ * @param h: a @table instance
+ */
 void table_destroy(table_handle_t *h) {
     if (!h) {
         return;
