@@ -167,7 +167,7 @@ static int32_t write_string(table_handle_t *h, const char *s) {
  * @param totcol: total column
  * @param end: line end character. can be "\r", "\n" or "\r\n"
  * @param title: the title of @h. if NULL, the title will not exist. note that the length of it must equals to @totcol
- * @return: !0: faulure
+ * @return: !0: failure
  *           0: success
  */
 int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol, const char *end,
@@ -201,7 +201,7 @@ int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol
  * write an item to @table
  * @param h: a @table instance
  * @param fmt,...: the formatted string
- * @return: !0: faulure
+ * @return: !0: failure
  *           0: success
  */
 int32_t table_write(table_handle_t *h, const char *fmt, ...) {
@@ -224,7 +224,7 @@ int32_t table_write(table_handle_t *h, const char *fmt, ...) {
  * @param mem: the memory to be written into
  * @param memlen: the length(in bytes) of @mem
  * @param reallen: the real length(in bytes) of writing
- * @return: !0: faulure
+ * @return: !0: failure
  *           0: success
  */
 int32_t table_read(table_handle_t *h, char *mem, uint32_t memlen, uint32_t *reallen) {
