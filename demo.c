@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include <stdio.h>
 #include "table.h"
 
@@ -45,8 +44,13 @@ int main(void) {
         "0096", "00097", "0000098",
         "00000099", "100", "000101",
     };
+	const char *title[] = {
+		"number1     ",
+		"number2        ",
+		"value",
+	};
 
-    FAIL_IF(table_init(&h, buf, sizeof(buf), 3, "\n"));
+    FAIL_IF(table_init(&h, buf, sizeof(buf), 3, "\n", title));
     for (i = 0; i < sizeof(str) / sizeof(str[0]); i++) {
         if (table_write(&h, str[i])) {
             break;
@@ -63,6 +67,4 @@ error:
     printf("error\n");
     return -1;
 }
-
-
 

@@ -149,11 +149,25 @@ static int32_t addstring_pad(char *p, uint32_t plen, const char *item, uint32_t 
     return padlen + 1;
 }
 
-int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol, const char *end) {
+static int32_t write_string(table_handle_t *h, const char *s) {
+    if (addstring(h, h->currcol, s) < 0) {
+        return -2;
+    }
+    if (++h->currcol >= h->totcol) {
+        h->currcol = 0;
+    }
+    return 0;
+}
+
+int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol, const char *end,
+                   const char *title[]) {
     uint32_t i;
 
     if (!h || !mem || !memlen || (!totcol || totcol > CONFIG_MAXCOLLEN) || !end) {
         return -1;
+    }
+    if (strcmp(end, "\r") != 0 && strcmp(end, "\n") != 0 && strcmp(end, "\r\n") != 0) {
+        return -2;
     }
 
     memset(mem, 0, memlen);
@@ -164,33 +178,11 @@ int32_t table_init(table_handle_t *h, char *mem, uint32_t memlen, int32_t totcol
     h->pool = (char *)mem;
     h->poollen = memlen;
     h->totcol = totcol;
-    memcpy(h->end, end, 2);
-    return 0;
-}
-
-// TODO  not work
-int32_t table_add_seprow(table_handle_t *h, char sep) {
-    uint32_t i, j;
-    uint32_t sum;
-    uint32_t space = h->poollen - 1;
-    char *p;
-
-    for (p = h->pool, i = 0; i < space && p[i]; i++);
-    if (i >= space) {       // if can't find '\0', that means p is full
-        return -1;
+    strncpy(h->end, end, 2);
+    h->title = (title ? 1 : 0);
+    for (i = 0; i < totcol; i++) {
+        write_string(h, title[i]);
     }
-
-    for (sum = 0, j = 0; j < h->totcol; j++) {
-        sum += h->colwidth[j];
-    }
-    if (i + sum + strlen(h->end) > space) {
-        return -2;
-    }
-
-    for (j = 0; j < sum; j++) {
-        h->pool[i + j] = sep;
-    }
-    strcat(h->pool, h->end);
     return 0;
 }
 
@@ -205,29 +197,64 @@ int32_t table_write(table_handle_t *h, const char *fmt, ...) {
     }
     va_end(args);
 
-    if (addstring(h, h->currcol, buf) < 0) {
-        return -2;
-    }
-    if (++h->currcol >= h->totcol) {
-        h->currcol = 0;
-    }
-    return 0;
+    return write_string(h, buf);
 }
 
 int32_t table_read(table_handle_t *h, char *mem, uint32_t memlen, uint32_t *reallen) {
     char *p;
     uint32_t i;
+    uint32_t linelen;
     uint32_t col;
     int32_t writelen;
 
     if (!h || !mem || !memlen || !reallen) {
         return -1;
     }
-
     memset(mem, 0, memlen);
     *reallen = 0;
 
-    for (i = 0, col = 0; (p = getitem(h, i)) != NULL; i++) {
+    if (h->title) {
+        for (linelen = 0, i = 0; i < h->totcol; i++) {
+            linelen += h->colwidth[i] + 1;
+        }
+        for (i = 0; i < linelen; i++) {
+            if (strcat_safe2(mem, memlen, "=") < 0) {
+                return -4;
+            }
+        }
+		if ((writelen = strcat_safe2(mem, memlen, h->end)) < 0) {
+			return -3;
+		}
+        *reallen += linelen + 2;
+
+        for (i = 0, col = 0; (p = getitem(h, i)) != NULL; i++) {
+            if ((writelen = addstring_pad(mem, memlen, p, h->colwidth[col])) < 0) {
+                return -2;
+            }
+            *reallen += writelen;
+
+            if (++col >= h->totcol) {
+                if ((writelen = strcat_safe2(mem, memlen, h->end)) < 0) {
+                    return -3;
+                }
+                *reallen += writelen;
+                col = 0;
+                break;
+            }
+        }
+
+        for (i = 0; i < linelen; i++) {
+            if (strcat_safe2(mem, memlen, "=") < 0) {
+                return -4;
+            }
+        }
+        if ((writelen = strcat_safe2(mem, memlen, h->end)) < 0) {
+            return -3;
+        }
+        *reallen += linelen + 2;
+    }
+
+    for (i = h->totcol, col = 0; (p = getitem(h, i)) != NULL; i++) {
         if ((writelen = addstring_pad(mem, memlen, p, h->colwidth[col])) < 0) {
             return -2;
         }
